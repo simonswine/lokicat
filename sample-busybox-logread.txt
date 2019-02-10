@@ -1,0 +1,5 @@
+Sun Feb 10 14:39:20 2019 daemon.notice hostapd: wlan0: AP-STA-DISCONNECTED xx:yy:zz:42:a2:2c
+Sun Feb 10 14:39:20 2019 daemon.info hostapd: wlan0: STA xx:yy:zz:42:a2:2c IEEE 802.11: disassociated due to inactivity
+Sun Feb 10 14:39:21 2019 daemon.info hostapd: wlan0: STA xx:yy:zz:42:a2:2c IEEE 802.11: deauthenticated due to inactivity (timer DEAUTH/REMOVE)
+Sun Feb 10 15:25:43 2019 authpriv.info dropbear[15829]: Child connection from 10.20.72.112:55202
+Sun Feb 10 15:25:44 2019 authpriv.notice dropbear[15829]: Pubkey auth succeeded for 'root' with key sha1!! 41:2a:c4:78:4c:56:99:70:cb:18:41:63:a4:fb:37:b4:1e:58:28:b7 from 10.20.72.112:55202
