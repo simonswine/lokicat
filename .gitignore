@@ -1,1 +1,3 @@
 *.o
+/lokicat
+/test/all_tests

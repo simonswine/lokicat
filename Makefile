@@ -1,8 +1,9 @@
 
 CC := gcc
-CFLAGS := -g -Wall -Werror -Wextra -std=c11 -I ./logproto $(pkg-config --cflags)
+CFLAGS := -g -Wall -Werror -Wextra -std=c11 -I . -I ./logproto $(pkg-config --cflags)
 LDFLAGS := $(shell pkg-config --libs 'libprotobuf-c >= 1.0.0, snappy, libcurl')
 TARGET := lokicat
+TEST_TARGET := test/all_tests
 
 LOKI_REF := master
 
@@ -45,9 +46,6 @@ generate-proto: $(PROTO_C_FILES) ## Generate C code from .proto files
 $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -Wall $(LDFLAGS) -o $@
 
-test: input_logread.o $(PROTO_OBJECTS)
-	$(CC) input_logread.o $(PROTO_OBJECTS) -Wall $(LDFLAGS) -o test
-
 fmt: ## Format all non generated C files
 	astyle \
 	--style=1tbs \
@@ -62,7 +60,16 @@ fmt: ## Format all non generated C files
 	--suffix=none \
 	$(SOURCES) $(TEST_SOURCES)
 
+
+$(TEST_TARGET): test/cu_test/cu_test.o $(TEST_SOURCES) $(filter-out ./lokicat.o,$(OBJECTS))
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+.PHONY: test
+test: $(TEST_TARGET) ## Run test suite
+	$(TEST_TARGET)
+
 .PHONY: clean
 clean:
-	rm -rf $(TARGET)
-	find . \( -name '*.pb-c.?' -o -name '*.o' \) -delete -print
+	rm -rf $(TARGET) $(TEST_TARGET)
+	find . \( -name '*.o' \) -delete -print
+
