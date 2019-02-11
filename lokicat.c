@@ -62,7 +62,7 @@ int main(int argc, char **argv)
         die ("missing --url=URL");
     } else {
         char url[255];
-        snprintf(url,255, "%s/api/prom/push", loki_url);
+        snprintf(url, 255, "%s/api/prom/push", loki_url);
         loki_url = (const char *) &url;
     }
 
@@ -83,14 +83,14 @@ int main(int argc, char **argv)
     streams[0] = &stream;
     push_request.n_streams = 1;
     push_request.streams = streams;
-    Logproto__Entry *entries [64];
+    Logproto__Entry *entries [1024];
     stream.entries = entries;
 
     // get hostname
     char hostname[1024];
     hostname[1023] = '\0';
     gethostname(hostname, 1023);
-    struct hostent* h;
+    struct hostent *h;
     h = gethostbyname(hostname);
 
     // generate labels
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
         }
 
         if (res == lokicat_input_status_success) {
-            fprintf(stderr,"retrieved entry of length %zu :\n", logproto__entry__get_packed_size(entry));
+            fprintf(stderr, "retrieved entry of length %zu :\n", logproto__entry__get_packed_size(entry));
             stream.entries[stream.n_entries++] = entry;
             entry = malloc(sizeof(Logproto__Entry));
             logproto__entry__init(entry);
@@ -132,9 +132,9 @@ int main(int argc, char **argv)
     logproto__push_request__pack (&push_request, buf);              // Pack the data
 
     // loop over streams
-    for(size_t s = 0; s < push_request.n_streams; s++) {
+    for (size_t s = 0; s < push_request.n_streams; s++) {
         // loop over entries
-        for(size_t e = 0; e < push_request.streams[s]->n_entries; e++) {
+        for (size_t e = 0; e < push_request.streams[s]->n_entries; e++) {
             Logproto__Entry *entry = push_request.streams[s]->entries[e];
             if (entry->timestamp != NULL) {
                 free(entry->timestamp);
