@@ -1,7 +1,11 @@
+ifeq ($(PREFIX),)
+    PREFIX := /usr/local
+endif
 
 CC := gcc
-CFLAGS := -g -Wall -Werror -Wextra -std=c11 -I . -I ./logproto $(pkg-config --cflags)
-LDFLAGS := $(shell pkg-config --libs 'libprotobuf-c >= 1.0.0, snappy, libcurl')
+CFLAGS += -g -Wall -Werror -Wextra -std=c11 -I . -I ./logproto
+LDFLAGS += -lprotobuf-c -lsnappy -lcurl
+
 TARGET := lokicat
 TEST_TARGET := test/all_tests
 
@@ -17,6 +21,8 @@ SOURCES_OBJECTS := $(subst .c,.o,$(SOURCES))
 TEST_SOURCES := $(wildcard ./test/*.c)
 
 OBJECTS := $(SOURCES_OBJECTS) $(PROTO_OBJECTS)
+
+default: build
 
 # from https://suva.sh/posts/well-documented-makefiles/
 .PHONY: help
@@ -73,3 +79,8 @@ clean:
 	rm -rf $(TARGET) $(TEST_TARGET)
 	find . \( -name '*.o' \) -delete -print
 
+.PHONY: install
+
+install: $(TARGET) ## Install binary into PREFIX
+	install -d $(DESTDIR)$(PREFIX)/bin/
+	install -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/
