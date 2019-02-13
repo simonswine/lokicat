@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <time.h>
 #include "lokicat.h"
@@ -77,22 +78,52 @@ lokicat_input_status input_logread20(char *buf, size_t *buf_len, Logproto__Entry
     char *line = NULL;
     size_t length = *buf_len;
 
-    for (size_t i = 0; i < length; i++) {
+    bool newline_found = false;
+
+    // find the new line
+    size_t i = 0;
+    for (i = 0; i < length; i++) {
         // new line, return entry
         if (buf[i] == '\n') {
-            // copy over including new line
-            line = malloc(i + 2);
-            line[i + 1] = '\0';
-            memcpy(line, buf, i + 1);
-
-            // parse line
-            input_logread_parse_line(line, entry);
-            free(line);
-
-            *buf_len = i;
-            return lokicat_input_status_success;
+            newline_found = true;
+            i++;
+            break;
         }
     }
 
-    return lokicat_input_status_continue;
+    // check for existing buffer
+    size_t before_len = 0;
+    if (entry->line != NULL) {
+        before_len = strlen(entry->line);
+    }
+
+    // copy over including new line
+    size_t line_len = before_len + i + 1;
+    line = malloc(line_len);
+    line[line_len - 1] = '\0';
+    if (before_len > 0) {
+        memcpy(line, entry->line, before_len);
+    }
+    memcpy(line + before_len, buf, i);
+
+    // free existing before
+    if (before_len > 0) {
+        free(entry->line);
+    }
+
+    *buf_len = i;
+
+    // return here if we don't have a new line
+    if (!newline_found) {
+        entry->line = line;
+        return lokicat_input_status_continue;
+    }
+
+    // parse line
+    log_debug("retrieved log line bytes=%06zu line='%.*s\\n'", strlen(line), (int) strlen(line) - 1, line);
+    input_logread_parse_line(line, entry);
+    free(line);
+
+    return lokicat_input_status_success;
+
 }

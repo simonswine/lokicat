@@ -6,6 +6,8 @@
 
 lokicat_input_status input_logread(FILE *stream, Logproto__Entry *entry);
 
+lokicat_input_status input_logread20(char *buf, size_t *buf_len, Logproto__Entry *entry);
+
 // take a logread line and parse it to entry
 void input_logread_parse_line(char *line, Logproto__Entry *entry);
 
