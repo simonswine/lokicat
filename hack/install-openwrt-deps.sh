@@ -14,16 +14,14 @@ curl --fail --retry 5 -L -o ./dl/protobuf-cpp-3.3.0.tar.gz https://mirror.sobuku
 # compile upstream packages
 ./scripts/feeds update base packages
 ./scripts/feeds install protobuf curl
-make package/protobuf/compile
-make package/curl/compile
 
 # update to later protobuf-c release
 cp -a "${SCRIPT_ROOT}/openwrt/package/protobuf-c" package/
-make package/protobuf-c/compile
 
 # compile custom snappy packages
 cp -a "${SCRIPT_ROOT}/openwrt/package/snappy" package/
-make package/snappy/compile
+
+make package/prepare
 
 # create dirs for lokicat package
 mkdir -p package/lokicat/src

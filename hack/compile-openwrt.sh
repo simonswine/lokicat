@@ -8,13 +8,18 @@ SCRIPT_ROOT=$(dirname "${BASH_SOURCE}")
 
 BUILD_IMAGE_NAME=simonswine/lokicat:build-openwrt
 
-BUILD_ROOT=${1:-/opt/openwrt-mvebu-cortexa9}
+TARGET=${1:-mvebu-cortexa9}
 
 # ensure dockerfile is ready
 docker build -t "${BUILD_IMAGE_NAME}" -f "${SCRIPT_ROOT}/../Dockerfile.openwrt" "${SCRIPT_ROOT}/.."
 
+# create volume container if missing
+volume_container_name="simonswine-lokicat-openwrt-${TARGET}"
+
+docker inspect "${volume_container_name}" > /dev/null 2> /dev/null || docker run --name "${volume_container_name}" -v /opt/openwrt-vol "${BUILD_IMAGE_NAME}" rsync -av /opt/openwrt-image/ /opt/openwrt-vol/
+
 # create container instance
-container_id=$(docker create --workdir "${BUILD_ROOT}" ${BUILD_IMAGE_NAME} make package/lokicat/compile)
+container_id=$(docker create --volumes-from ${volume_container_name} --workdir /opt/openwrt-vol ${BUILD_IMAGE_NAME} make package/lokicat/compile V=99)
 cleanup_container() {
     docker rm -f "${container_id}"
 }
@@ -25,7 +30,7 @@ cleanup_tmpfile() {
     rm -f "${tmpfile}"
 }
 trap "cleanup_tmpfile" EXIT SIGINT
-cat > ${tmpfile} <<\EOFOUTER
+cat > ${tmpfile} <<\EOF
 #
 # Copyright (C) 2006-2013 OpenWrt.org
 #
@@ -67,12 +72,16 @@ define Package/lokicat/install
 endef
 
 $(eval $(call BuildPackage,lokicat))
-
-EOFOUTER
-# copy sources into container
-docker cp "${tmpfile}" "${container_id}:${BUILD_ROOT}/package/lokicat/Makefile"
+EOF
 
 # copy sources into container
-git ls-files '**.proto' '**.c' '**.h' 'Makefile' | xargs tar -cv | docker cp - "${container_id}:${BUILD_ROOT}/package/lokicat/src"
+docker cp "${tmpfile}" "${container_id}:/opt/openwrt-vol/package/lokicat/Makefile"
 
-docker start -a "${container_id}"
+# copy sources into containerc
+git ls-files '**.proto' '**.c' '**.h' 'Makefile' | xargs tar -cv | docker cp - "${container_id}:/opt/openwrt-vol/package/lokicat/src"
+
+# run build
+docker start -a ${container_id}
+
+# copy packages back
+docker cp "${container_id}:/opt/openwrt-vol/bin/packages" - > output.tar

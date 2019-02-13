@@ -4,13 +4,14 @@ RUN apt update && apt -y install build-essential libncurses5-dev gawk git libssl
 
 WORKDIR /src
 
-# Install OpenWRT SDKs
-ADD hack/install-openwrt-sdk.sh /src/hack/
-RUN /bin/bash -x ./hack/install-openwrt-sdk.sh https://downloads.openwrt.org/releases/18.06.2/targets/mvebu/cortexa9/openwrt-sdk-18.06.2-mvebu-cortexa9_gcc-7.3.0_musl_eabi.Linux-x86_64.tar.xz be30d8a28a302ff526c6cc06d20a241808756b130864d66d040f4a2380e070d9 /opt/openwrt-mvebu-cortexa9
-RUN /bin/bash -x ./hack/install-openwrt-sdk.sh https://downloads.openwrt.org/releases/18.06.2/targets/ar71xx/generic/openwrt-sdk-18.06.2-ar71xx-generic_gcc-7.3.0_musl.Linux-x86_64.tar.xz cceeff0d40b611c580b5fbaa4f466fb5c7ddf73850161c9f60e9449bbf680a01 /opt/openwrt-ar71xx-generic
+ARG openwrt_sdk_url=https://downloads.openwrt.org/releases/18.06.2/targets/mvebu/cortexa9/openwrt-sdk-18.06.2-mvebu-cortexa9_gcc-7.3.0_musl_eabi.Linux-x86_64.tar.xz
+ARG openwrt_sdk_hash=be30d8a28a302ff526c6cc06d20a241808756b130864d66d040f4a2380e070d9
 
-# Compile build dependencies in openwrt
-ADD hack/compile-openwrt-deps.sh /src/hack/
+# Install OpenWRT SDK
+ADD hack/install-openwrt-sdk.sh /src/hack/
+RUN /bin/bash -x ./hack/install-openwrt-sdk.sh ${openwrt_sdk_url} ${openwrt_sdk_hash} /opt/openwrt-image
+
+# Install dependencies in openwrt
+ADD hack/install-openwrt-deps.sh /src/hack/
 ADD hack/openwrt /src/hack/openwrt/
-RUN cd /opt/openwrt-mvebu-cortexa9 && bash -x /src/hack/compile-openwrt-deps.sh
-RUN cd /opt/openwrt-ar71xx-generic && bash -x /src/hack/compile-openwrt-deps.sh
+RUN cd /opt/openwrt-image && bash -x /src/hack/install-openwrt-deps.sh

@@ -22,8 +22,3 @@ echo "${hash}  ${tmpfile}" | sha256sum -c
 
 mkdir -p "${dest}"
 tar xf "${tmpfile}" --strip-components 1 -C "${dest}"
-
-# link download folder accross
-mkdir -p "${dest}/../openwrt-shared/dl"
-rm -rf "${dest}/dl"
-ln -s "../openwrt-shared/dl" "${dest}/dl"
